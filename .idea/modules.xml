@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Ear/Ear.iml" filepath="$PROJECT_DIR$/Ear/Ear.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Scheduler.iml" filepath="$PROJECT_DIR$/Scheduler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Web2/Web2.iml" filepath="$PROJECT_DIR$/Web2/Web2.iml" />
+    </modules>
+  </component>
+</project>
