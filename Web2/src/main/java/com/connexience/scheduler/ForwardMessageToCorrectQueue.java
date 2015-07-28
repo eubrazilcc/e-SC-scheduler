@@ -27,6 +27,8 @@ public class ForwardMessageToCorrectQueue {
 
             messageProducer.send(message);
 
+            connection.close();
+            session.close();
 
         } catch (NamingException e) {
             e.printStackTrace();

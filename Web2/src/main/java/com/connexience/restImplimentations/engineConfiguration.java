@@ -36,41 +36,6 @@ public class engineConfiguration {
 
     }*/
 
-    /* public static String checkForScheduler(){
-
-         String newJMSQueueName = null;
-         try {
-
-             URL url = new URL("http://localhost:8080/AScheduler/rest/status/");
-             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-
-             connection.setRequestMethod("GET");
-             connection.setRequestProperty("Accept","application/json");
-
-             if(connection.getResponseCode() != 200){
-             }
-             else {
-                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                 String response;
-                 while ((response = bufferedReader.readLine()) != null){
-
-                     if(response.contains("available")){
-
-                         newJMSQueueName = response.substring(response.lastIndexOf(",")+1);
-
-                     }
-
-                 }
-             }
-
-         } catch (MalformedURLException e) {
-             e.printStackTrace();
-         } catch (IOException e) {
-             e.printStackTrace();
-         }
-         return newJMSQueueName;
-     }
- */
     public static int getCount(){
         int count = 0;
         try {
@@ -163,7 +128,6 @@ public class engineConfiguration {
 
     public static List<WorkflowEngineInstance> getEngineStatus() {
 
-        String result = "In engineconfiguration class";
         List<WorkflowEngineInstance> workflowEngineInstances = null;
         try {
 
@@ -262,7 +226,7 @@ public class engineConfiguration {
 
             }
 
-            //setEngineMaxThreads(hostName,maxNoConcurrentInvocation);
+            setEngineMaxThreads(hostName);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -270,19 +234,19 @@ public class engineConfiguration {
         return returnQueueName;
     }
 
-    /*public static void setEngineMaxThreads(String hostName, String maxNoConcurrentInvocation){
+    public static void setEngineMaxThreads(String hostName){
 
         try {
             javax.naming.Context c = new InitialContext();
             EngineInformationManager manager= (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
 
-            manager.setEngineStatus(hostName,maxNoConcurrentInvocation);
+            manager.setEngineStatus(hostName);
 
         } catch (NamingException e) {
             e.printStackTrace();
         }
 
-    }*/
+    }
 
     public static String fetchQueueName(String ipAddress){
         ObjectMapper mapper = new ObjectMapper();

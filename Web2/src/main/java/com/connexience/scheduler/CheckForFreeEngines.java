@@ -1,3 +1,4 @@
+/*
 package com.connexience.scheduler;
 
 import com.connexience.performance.model.WorkflowEngineInstance;
@@ -10,9 +11,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+*/
 /**
  * Created by naa166 - Anirudh Agarwal on 16/06/2015.
- */
+ *//*
+
 @Singleton
 @Startup
 @EJB(name = "java:global/ejb/CheckForFreeEngines", beanInterface = CheckForFreeEngines.class)
@@ -84,7 +87,8 @@ public class CheckForFreeEngines extends Thread {
         //if mediator queue contains any message then only proceed with the logic
         while (true) {
 
-               /* if(!engineStatus.isEmpty()){
+               */
+/* if(!engineStatus.isEmpty()){
 
                     //Below snippet is used to hold information about the availability of an engine
                     for (Object key : engineStatus.keySet()) {
@@ -102,12 +106,14 @@ public class CheckForFreeEngines extends Thread {
                             }
                         //}
 
-                    }*/
+                    }*//*
+
 
 
             //Below snippet is used if any message is waiting
             if (jmsMessageArray.size() > 0) {
-                       /* boolean freeEngineAvailable = false;
+                       */
+/* boolean freeEngineAvailable = false;
                         String freeEngineIpAddress = null;
                         for (Object key : engineStatus.keySet()) {
                             if (engineStatus.get(key)) {
@@ -116,7 +122,8 @@ public class CheckForFreeEngines extends Thread {
                             }
                         }
 
-                        if (freeEngineAvailable) {*/
+                        if (freeEngineAvailable) {*//*
+
                 List<WorkflowEngineInstance> workflowEngineInstances = engineConfiguration.getEngineStatus();
 
                 for (int i = 0; i < workflowEngineInstances.size(); i++) {
@@ -134,11 +141,13 @@ public class CheckForFreeEngines extends Thread {
                         break;
                     }
                 }
-                           /* String winningQueueName = engineConfiguration.fetchQueueName(freeEngineIpAddress);
+                           */
+/* String winningQueueName = engineConfiguration.fetchQueueName(freeEngineIpAddress);
                             Message message = getMessage();
                             updateEngineStatus(freeEngineIpAddress, false);
                             ForwardMessageToCorrectQueue.pushMessage(winningQueueName, message);
-                        }*/
+                        }*//*
+
             }
             //check if Mediator queue contains more message
             //if it contains more message
@@ -152,4 +161,4 @@ public class CheckForFreeEngines extends Thread {
 
     }
 }
-//}
+//}*/

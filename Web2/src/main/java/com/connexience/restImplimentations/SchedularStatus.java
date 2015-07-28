@@ -1,7 +1,8 @@
 package com.connexience.restImplimentations;
 
 import com.connexience.performance.model.WorkflowEngineInstance;
-import com.connexience.scheduler.CheckForFreeEngines;
+//import com.connexience.scheduler.CheckForFreeEngines;
+import com.connexience.scheduler.CalculateRTT;
 import com.connexience.scheduler.EngineInformationManager;
 import com.connexience.scheduler.MessageStorageSingletonBean;
 
@@ -57,25 +58,43 @@ public class SchedularStatus {
         return status + "," + finalQueueName;
     }
 
-    /*@GET
-    @Path("/invocationFinsihed/{hostName}/{difference}")
+    @GET
+    @Path("/invocationStarted/{hostName}")
     @Produces("application/json")
-    public void invocationFinsihed(@PathParam(value = "hostName")String EngineIp,@PathParam(value = "difference")String difference){
+    public void invocationStarted(@PathParam(value = "hostName")String EngineIp){
 
         try {
             Context c = new InitialContext();
             EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
-            for(int i=0 ; i<Integer.parseInt(difference);i++) {
+            /*for(int i=0 ; i<Integer.parseInt(difference);i++) {
                 manager.updateEngineStatus(EngineIp, false, true);
                 manager.checkForWaitingJob(EngineIp,manager);
-            }
+            }*/
+            manager.updateEngineStatus(EngineIp,true,false);
         } catch (NamingException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     @GET
-    // @Path("/status/{engineid}")
+    @Path("/invocationFinished/{hostName}")
+    @Produces("application/json")
+    public void invocationFinished(@PathParam(value = "hostName")String EngineIp){
+
+        try {
+            Context c = new InitialContext();
+            EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
+            /*for(int i=0 ; i<Integer.parseInt(difference);i++) {
+                manager.updateEngineStatus(EngineIp, false, true);
+                manager.checkForWaitingJob(EngineIp,manager);
+            }*/
+            manager.updateEngineStatus(EngineIp,false,true);
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @GET
     @Path("/engineIp")
     @Produces("application/json")
     public String getEngineInformation(){
@@ -93,7 +112,6 @@ public class SchedularStatus {
     }
 
     @GET
-    // @Path("/status/{engineid}")
     @Path("/test")
     @Produces("application/json")
     public String test(){
@@ -149,7 +167,7 @@ public class SchedularStatus {
         return testSingleton.getMessageArray().toString();
     }
 
-    @GET
+    /*@GET
     @Path("/displayHash")
     @Produces("application/json")
     public String displayHash(){
@@ -157,9 +175,9 @@ public class SchedularStatus {
         CheckForFreeEngines checkForFreeEngines = new CheckForFreeEngines();
         return checkForFreeEngines.displayHashMap();
 
-    }
+    }*/
 
-    @GET
+    /*@GET
     @Path("/displaySomething")
     @Produces("application/json")
     public String displaySomething(){
@@ -167,36 +185,36 @@ public class SchedularStatus {
         CheckForFreeEngines checkForFreeEngines = new CheckForFreeEngines();
         return checkForFreeEngines.getDunno();
 
-    }
+    }*/
 
     @GET
     @Path("/displayThreadArray")
     @Produces("application/json")
     public String displayThreadArray(){
-       // MessageStorageSingletonBean testSingleton = new MessageStorageSingletonBean();
+        // MessageStorageSingletonBean testSingleton = new MessageStorageSingletonBean();
         //return testSingleton.getMessageArray().toString();
 
         try {
             Context c = new InitialContext();
-            CheckForFreeEngines testThread = (CheckForFreeEngines) c.lookup("java:global/ejb/CheckForFreeEngines");
-            return  testThread.getJmsMessageArray().toString();
+            EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
+            return  manager.getJmsMessageArray().toString();
         } catch (NamingException e) {
             e.printStackTrace();
         }
         return "not working :(";
     }
 
-    /*@GET
+    @GET
     @Path("/displayHash")
     @Produces("application/json")
     public String displayHash(){
 
-        EngineInformationManager checkForFreeEngines = new EngineInformationManager();
-        return checkForFreeEngines.displayHashMap();
+        EngineInformationManager manager = new EngineInformationManager();
+        return manager.displayHashMap();
 
     }
 
-    @GET
+   /*@GET
     @Path("/displayThreadArray")
     @Produces("application/json")
     public String displayThreadArray(){
@@ -212,5 +230,22 @@ public class SchedularStatus {
         }
         return "not working :(";
     }*/
+
+    @GET
+    @Path("/findRTT")
+    @Produces("application/json")
+    public String findRTT(){
+
+
+        String result = null;
+        try {
+            result = CalculateRTT.findRTT("192.168.56.102" , "6789");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
 
 }

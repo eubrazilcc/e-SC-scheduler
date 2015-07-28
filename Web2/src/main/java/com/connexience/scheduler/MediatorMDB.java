@@ -28,42 +28,26 @@ public class MediatorMDB implements MessageListener{
     //private static String MEDIATOR_QUEUE = "mediatorQueue";
 
     public void onMessage(Message message) {
-        Calendar calendar = Calendar.getInstance();
-       /* String filename = "/home/anirudh/scheduler/test" + calendar.getTime();
-        File file = new File(filename);
-        try {
-
-            if(!file.exists())
-                try {
-                    file.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            PrintWriter printWriter = new PrintWriter(filename,"utf-8");
-            printWriter.println(message.getClass().toString());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }*/
-        //ArrayList<Double> toSort = new ArrayList<Double>();
         HashMap<String, Double> engineCompare = new HashMap<String, Double>();
 
         /* Call the restAPI to get the information about the engines */
         List<WorkflowEngineInstance> workflowEngineInstances  = engineConfiguration.getEngineStatus();
-
-        /*put the ip address and the CpuPercent used in a HashMap */
-        for(int i = 0 ; i < workflowEngineInstances.size(); i++){
-            //toSort.add(workflowEngineInstances.get(i).getCpuPercentUsed());
-            if(workflowEngineInstances.get(i).getStatus() == 1 && workflowEngineInstances.get(i).getCpuPercentUsed() < 80 && workflowEngineInstances.get(i).getRunningWorkflowCount() == 0)
-                engineCompare.put(workflowEngineInstances.get(i).getIpAddress(), workflowEngineInstances.get(i).getCpuPercentUsed());
-        }
-
-        //uncomment the if-else block when there is way to find out if the engine is running or not
         try {
             javax.naming.Context c = new InitialContext();
-            CheckForFreeEngines checkForFreeEngines= (CheckForFreeEngines) c.lookup("java:global/ejb/CheckForFreeEngines");
+            EngineInformationManager manager = (EngineInformationManager)c.lookup("java:global/ejb/EngineInformationManager");
+           // CheckForFreeEngines checkForFreeEngines= (CheckForFreeEngines) c.lookup("java:global/ejb/CheckForFreeEngines");
+        /*put the ip address and the CpuPercent used in a HashMap */
+                //toSort.add(workflowEngineInstances.get(i).getCpuPercentUsed());
+                //if(workflowEngineInstances.get(i).getStatus() == 1 && workflowEngineInstances.get(i).getCpuPercentUsed() < 80 && workflowEngineInstances.get(i).getRunningWorkflowCount() == 0)
+
+
+
+            for(int i = 0 ; i < workflowEngineInstances.size(); i++){
+                if(workflowEngineInstances.get(i).getStatus() == 1 && workflowEngineInstances.get(i).getCpuPercentUsed() < 80 )
+                    if (manager.getEngineCurrentThreadCount(workflowEngineInstances.get(i).getIpAddress()) > 0)
+                        engineCompare.put(workflowEngineInstances.get(i).getIpAddress(), workflowEngineInstances.get(i).getCpuPercentUsed());
+            }
+
 
 
 
@@ -73,7 +57,8 @@ public class MediatorMDB implements MessageListener{
                 Map.Entry<String,Double> firstEntry = engineCompare.entrySet().iterator().next();
                 String winningIpAddress = firstEntry.getKey();
                 String winningQueueName = engineConfiguration.fetchQueueName(winningIpAddress);
-                checkForFreeEngines.updateEngineStatus(winningIpAddress, false);
+                //checkForFreeEngines.updateEngineStatus(winningIpAddress, false);
+                manager.updateEngineStatus(winningIpAddress,true,false);
                 ForwardMessageToCorrectQueue.pushMessage(winningQueueName,message);
             }
             else if (numberOfFreeEngines > 1 ){
@@ -81,13 +66,15 @@ public class MediatorMDB implements MessageListener{
                 Map.Entry<String,Double> firstEntry = sortedMap.entrySet().iterator().next();
                 String winningIpAddress = firstEntry.getKey();
                 String winningQueueName = engineConfiguration.fetchQueueName(winningIpAddress);
-                checkForFreeEngines.updateEngineStatus(winningIpAddress, false);
+                manager.updateEngineStatus(winningIpAddress,true,false);
+                //checkForFreeEngines.updateEngineStatus(winningIpAddress, false);
                 ForwardMessageToCorrectQueue.pushMessage(winningQueueName,message);
             }
             else if (numberOfFreeEngines < 1){
                 //push message to mediator queue
                 //ForwardMessageToCorrectQueue.pushMessage(MEDIATOR_QUEUE, message);
-                checkForFreeEngines.addMessageToArray(message);
+                //checkForFreeEngines.addMessageToArray(message);
+                manager.addMessageToArray(message);
             }
         } catch (NamingException e) {
             e.printStackTrace();
