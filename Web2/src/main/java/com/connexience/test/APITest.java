@@ -8,7 +8,7 @@ import com.connexience.server.model.security.User;
 import com.connexience.server.model.workflow.WorkflowInvocationFolder;
 import com.connexience.server.workflow.api.API;
 import com.connexience.server.workflow.api.ApiProvider;
-import com.connexience.server.workflow.service.DataProcessorReuirementsDefinition;
+import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
 import com.connexience.server.workflow.service.DataProcessorServiceDefinition;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class APITest {
             String versionId = "6363";
 
             System.out.println("before calling api");
-            DataProcessorReuirementsDefinition def = api.getRequirements(serviceId, versionId);
+            DataProcessorRequirementsDefinition def = api.getRequirements(serviceId, versionId);
             System.out.println(def.getTest());
 
 

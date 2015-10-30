@@ -5,7 +5,7 @@ import com.connexience.performance.model.WorkflowEngineInstance;
 import com.connexience.restImplimentations.engineConfiguration;
 import com.connexience.server.model.workflow.WorkflowInvocationMessage;
 import com.connexience.server.util.SerializationUtils;
-import com.connexience.server.workflow.service.DataProcessorReuirementsDefinition;
+import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
 
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
@@ -40,7 +40,7 @@ public class MediatorMDB implements MessageListener{
      * @param manager Instance of EngineInformationManager class
      * @return list of engine suitable for the task
      */
-    private static List<WorkflowEngineInstance> getMinimumThreadEngines(ArrayList<DataProcessorReuirementsDefinition> definition, List<WorkflowEngineInstance> workflowEngineInstances, EngineInformationManager manager){
+    private static List<WorkflowEngineInstance> getMinimumThreadEngines(ArrayList<DataProcessorRequirementsDefinition> definition, List<WorkflowEngineInstance> workflowEngineInstances, EngineInformationManager manager){
         HashMap<WorkflowEngineInstance, Integer> tempMap = new HashMap<WorkflowEngineInstance, Integer>();
         long requiredRAM = getMinPhysicalRam(definition);
         long requiredDiskSpace = getMinDiskSpace(definition);
@@ -86,7 +86,7 @@ public class MediatorMDB implements MessageListener{
             return true;
     }
 
-    private static long getMinPhysicalRam(ArrayList<DataProcessorReuirementsDefinition> definition) {
+    private static long getMinPhysicalRam(ArrayList<DataProcessorRequirementsDefinition> definition) {
         long min = 0;
         if (definition.size() == 1)
             min = Long.parseLong(definition.get(0).getMinimumPhysicalRAMRequired());
@@ -101,7 +101,7 @@ public class MediatorMDB implements MessageListener{
 
     }
 
-    private static long getMinDiskSpace(ArrayList<DataProcessorReuirementsDefinition> definition) {
+    private static long getMinDiskSpace(ArrayList<DataProcessorRequirementsDefinition> definition) {
         long min = 0;
         if (definition.size() == 1)
             min = Long.parseLong(definition.get(0).getDiskFreeSpaceRequired());
@@ -118,7 +118,7 @@ public class MediatorMDB implements MessageListener{
     }
 
 
-    public static List<WorkflowEngineInstance> schedule(ArrayList<DataProcessorReuirementsDefinition> definition, EngineInformationManager manager,
+    public static List<WorkflowEngineInstance> schedule(ArrayList<DataProcessorRequirementsDefinition> definition, EngineInformationManager manager,
                                                         List<WorkflowEngineInstance> workflowEngineInstances){
         boolean performanceOriented = true;
         boolean costOriented = false;
@@ -141,9 +141,9 @@ public class MediatorMDB implements MessageListener{
      * @param message the workflow invocation message
      * @return the information of each blocks that is present in the requirements XML
      */
-    public static ArrayList<DataProcessorReuirementsDefinition> getDefinitionArrayList(Message message){
+    public static ArrayList<DataProcessorRequirementsDefinition> getDefinitionArrayList(Message message){
 
-        ArrayList<DataProcessorReuirementsDefinition> definitionArrayList = new ArrayList<DataProcessorReuirementsDefinition>();
+        ArrayList<DataProcessorRequirementsDefinition> definitionArrayList = new ArrayList<DataProcessorRequirementsDefinition>();
 
         if (message instanceof BytesMessage) {
             BytesMessage bm = (BytesMessage) message;
@@ -187,7 +187,7 @@ public class MediatorMDB implements MessageListener{
     }
 
     public static void selectCorrectEngine(List<WorkflowEngineInstance> workflowEngineInstances,
-                                           ArrayList<DataProcessorReuirementsDefinition> definitionArrayList,
+                                           ArrayList<DataProcessorRequirementsDefinition> definitionArrayList,
                                            EngineInformationManager manager,Message message){
         HashMap<String, Double> engineCompare = new HashMap<String, Double>();
         int numberOfFreeEngines = workflowEngineInstances.size();
@@ -223,7 +223,7 @@ public class MediatorMDB implements MessageListener{
     public void onMessage(Message message) {
 
         /**Test method to call the prediction method */
-        ArrayList<DataProcessorReuirementsDefinition> definitionArrayList;
+        ArrayList<DataProcessorRequirementsDefinition> definitionArrayList;
 
 
         definitionArrayList = getDefinitionArrayList(message);

@@ -8,7 +8,7 @@ import com.connexience.server.workflow.api.ApiProvider;
 import com.connexience.server.workflow.blocks.processor.DataProcessorBlock;
 import com.connexience.server.workflow.cloud.download.DownloadException;
 import com.connexience.server.workflow.cloud.download.WorkflowDataFetcher;
-import com.connexience.server.workflow.service.DataProcessorReuirementsDefinition;
+import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
 import org.pipeline.core.drawing.BlockModel;
 import org.pipeline.core.drawing.DrawingModel;
 import org.pipeline.core.drawing.model.DefaultDrawingModel;
@@ -34,10 +34,10 @@ public class RetrieveRequirementXMLForAllBlocks {
 
 
 
-    public ArrayList<DataProcessorReuirementsDefinition> getXMLForAllBlocks(WorkflowInvocationMessage message){
+    public ArrayList<DataProcessorRequirementsDefinition> getXMLForAllBlocks(WorkflowInvocationMessage message){
 
         DocumentRecord serviceDoc;
-        ArrayList<DataProcessorReuirementsDefinition> reuirementsDefinitionArrayList = new ArrayList<DataProcessorReuirementsDefinition>();
+        ArrayList<DataProcessorRequirementsDefinition> reuirementsDefinitionArrayList = new ArrayList<DataProcessorRequirementsDefinition>();
         //String serviceVersionId;DocumentVersion latestVersion = EJBLocator.lookupStorageBean().getLatestVersion(ticket, serviceId);
         try {
             apiLink = apiProvider.createApi(message.getTicket());
@@ -91,7 +91,7 @@ public class RetrieveRequirementXMLForAllBlocks {
                     serviceDoc.setId(dpb.getServiceId());
 
                     String latestVersionId = apiLink.getLatestVersionId(serviceDoc.getId());
-                    DataProcessorReuirementsDefinition def = new DataProcessorReuirementsDefinition();
+                    DataProcessorRequirementsDefinition def = new DataProcessorRequirementsDefinition();
 
                      def = apiLink.getRequirements(dpb.getServiceId(), latestVersionId);
                     if(def.isRequirementsFilePresent()){

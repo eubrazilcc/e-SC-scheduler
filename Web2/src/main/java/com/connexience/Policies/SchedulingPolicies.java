@@ -1,7 +1,7 @@
 /*
 package com.connexience.Policies;
 
-import com.connexience.server.workflow.service.DataProcessorReuirementsDefinition;
+import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
 
 */
 /**
@@ -14,6 +14,6 @@ public interface SchedulingPolicies {
 
     boolean performanceOriented = false;
 
-    void schedule(DataProcessorReuirementsDefinition definition);
+    void schedule(DataProcessorRequirementsDefinition definition);
 }
 */

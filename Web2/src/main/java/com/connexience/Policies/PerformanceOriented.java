@@ -1,7 +1,7 @@
 /*
 package com.connexience.Policies;
 
-import com.connexience.server.workflow.service.DataProcessorReuirementsDefinition;
+import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
 
 */
 /**
@@ -13,7 +13,7 @@ public class PerformanceOriented implements SchedulingPolicies{
 
 
     @Override
-    public void schedule(DataProcessorReuirementsDefinition definition) {
+    public void schedule(DataProcessorRequirementsDefinition definition) {
 
     }
 }
