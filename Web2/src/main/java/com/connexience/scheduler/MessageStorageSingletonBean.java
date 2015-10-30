@@ -24,6 +24,16 @@ public class MessageStorageSingletonBean {
     private static ArrayList<String> messageArray = new ArrayList<String>();
     private static ArrayList<Message> jmsMessageArray = new ArrayList<Message>();
 
+    public static String getResult() {
+        return result;
+    }
+
+    public static void setResult(String result) {
+        MessageStorageSingletonBean.result = result;
+    }
+
+    private static String result;
+
     private static boolean ThreadRunFlag = false;
 
     public static boolean isThreadRunFlag() {

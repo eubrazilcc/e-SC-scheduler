@@ -275,4 +275,12 @@ public class engineConfiguration {
 
         return  returnQueueName;
     }
+
+    public static void updateEngineInformationManager(){
+        List<WorkflowEngineInstance> workflowEngineInstances = getEngineStatus();
+        for(int i = 0 ; i < workflowEngineInstances.size(); i++){
+            if (workflowEngineInstances.get(i).getStatus() == 1)
+                setEngineMaxThreads(workflowEngineInstances.get(i).getIpAddress());
+        }
+    }
 }

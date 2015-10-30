@@ -42,12 +42,47 @@
         <dependency>
             <groupId>com.connexience</groupId>
             <artifactId>monitoring-common</artifactId>
+            <version>0.8-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.connexience</groupId>
             <artifactId>server-common</artifactId>
             <version>3.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.connexience</groupId>
+            <artifactId>api-model</artifactId>
+            <version>3.1-SNAPSHOT</version>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>com.connexience</groupId>
+            <artifactId>server-common</artifactId>
+            <version>3.1-SNAPSHOT</version>
+        </dependency>-->
+
+       <!-- <dependency>
+            <groupId>com.connexience</groupId>
+            <artifactId>MonitoringServer-ejb</artifactId>
+            <version>0.8-SNAPSHOT</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>com.connexience</groupId>
+            <artifactId>workflow-engine</artifactId>
+            <version>3.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jboss.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!--<dependency>
@@ -94,12 +129,12 @@
             <version>2.13.1</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson-provider</artifactId>
             <version>2.3.4.Final</version>
             <scope>provided</scope>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.thetransactioncompany</groupId>
@@ -111,6 +146,25 @@
             <artifactId>persistence-api</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>3.0.10.Final</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <!--<dependency>
+            <groupId>com.connexience</groupId>
+            <artifactId>MonitoringServer-ejb</artifactId>
+            <version>0.8-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hibernate-jpa-2.0-api</artifactId>
+                    <groupId>org.hibernate.javax.persistence</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>-->
 
 
     </dependencies>

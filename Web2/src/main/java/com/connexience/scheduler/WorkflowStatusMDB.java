@@ -2,16 +2,13 @@ package com.connexience.scheduler;
 
 import com.connexience.performance.model.WorkflowEngineStats;
 import com.connexience.server.util.SerializationUtils;
-import javax.annotation.Resource;
+import com.connexience.server.workflow.engine.WorkflowInvocation;
+
 import javax.ejb.*;
-import javax.inject.Inject;
 import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import javax.persistence.EntityManager;
 import java.io.*;
-import java.util.Calendar;
-import java.util.logging.Logger;
 
 /**
  * Created by naa166 - Anirudh Agarwal on 20/07/2015.
@@ -25,24 +22,14 @@ import java.util.logging.Logger;
                 @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
                 @ActivationConfigProperty(propertyName = "destination", propertyValue = "topic/workflowstatus")
         }, mappedName = "WorkflowStatus")
-public class WorkflowStatusMDB implements MessageListener{
+public class WorkflowStatusMDB implements MessageListener {
 
-    @Inject
-    private EntityManager em;
-
-    @Inject
-    private Logger logger;
-
-    @Resource
-    private javax.ejb.MessageDrivenContext mdc;
 
 
 
     @Override
     public void onMessage(Message message) {
 
-        Calendar calendar = Calendar.getInstance();
-        System.out.println("Inside Scheduler WorkflowStatusMDB");
 
         try {
             BytesMessage bm = (BytesMessage) message;
@@ -65,24 +52,15 @@ public class WorkflowStatusMDB implements MessageListener{
                     EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
 
                     String engineIp = ((WorkflowEngineStats) payload).getIpAddress();
+                    System.out.println("in scheduler workflowStatusMDB, calling updateEngineStats");
                     manager.updateEngineStatus(engineIp,false,true);
                 }
-
-
-                String filename1 = "/home/anirudh/temp/InsideSchedulerMDB" + calendar.getTime();
-                File file1 = new File(filename1);
-                try {
-
-                    if(!file1.exists())
-                        try {
-                            file1.createNewFile();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            }
+            else if(payload instanceof WorkflowInvocation){
+                System.out.println("got Workflow invocation message");
+                WorkflowInvocation invocation = (WorkflowInvocation)payload;
+                EngineInformationManager manager = new EngineInformationManager();
+                manager.freeResourceInformation(invocation.getInvocationId());
             }
 
         } catch (JMSException e) {

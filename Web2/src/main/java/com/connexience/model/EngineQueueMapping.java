@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 
 /**
  * Created by naa166 - Anirudh Agarwal on 09/06/2015.
+ * This class is for creating the json object that will be used to map the engine ip with the queue namw
  */
 @Entity
 public class EngineQueueMapping {

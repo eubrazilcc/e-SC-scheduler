@@ -5,6 +5,7 @@ import com.connexience.performance.model.WorkflowEngineInstance;
 import com.connexience.scheduler.CalculateRTT;
 import com.connexience.scheduler.EngineInformationManager;
 import com.connexience.scheduler.MessageStorageSingletonBean;
+import com.connexience.test.APITest;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -13,9 +14,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -30,9 +28,6 @@ import java.util.List;
 @Path("/rest")
 public class SchedularStatus {
 
-    private int count=0;
-    private String engineID;
-
     /*
     PerformanceWorkflowEngineBean engineBean;*/
 
@@ -43,7 +38,7 @@ public class SchedularStatus {
     public String getSchedularStatus(@PathParam(value = "hostName")String hostName){
 
         String status = "available";
-        count=engineConfiguration.getCount();
+        int count = engineConfiguration.getCount();
         count = count + 1;
         engineConfiguration.putCount(count);
 
@@ -55,6 +50,13 @@ public class SchedularStatus {
         //BufferedReader br = new BufferedReader(new InputStreamReader(input));
         String finalQueueName = engineConfiguration.updateEngineQueueMapping(hostName,queueName);
 
+        try {
+            Context c = new InitialContext();
+            EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
+            manager.checkForWaitingJob(hostName);
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
         return status + "," + finalQueueName;
     }
 
@@ -70,7 +72,7 @@ public class SchedularStatus {
                 manager.updateEngineStatus(EngineIp, false, true);
                 manager.checkForWaitingJob(EngineIp,manager);
             }*/
-            manager.updateEngineStatus(EngineIp,true,false);
+            manager.updateEngineStatus(EngineIp, true, false);
         } catch (NamingException e) {
             e.printStackTrace();
         }
@@ -95,6 +97,18 @@ public class SchedularStatus {
     }
 
     @GET
+    @Path("/updateEngineResourceInformations/{invocationId}")
+    @Produces("application/json")
+    public void updateEngineResourceInformation(@PathParam(value = "invocationId")String invocationId){
+        System.out.println("updating engine information");
+
+            //Context c = new InitialContext();
+            EngineInformationManager manager = new EngineInformationManager();
+            manager.freeResourceInformation(invocationId);
+
+    }
+
+    @GET
     @Path("/engineIp")
     @Produces("application/json")
     public String getEngineInformation(){
@@ -112,35 +126,15 @@ public class SchedularStatus {
     }
 
     @GET
-    @Path("/test")
+    @Path("/updateEngineInformationManager")
     @Produces("application/json")
-    public String test(){
-        String result = "calling method atleast";
+    public String updateEngineInformationManager(){
+        String result = "successfully updated";
 
-        InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("test.txt");
-        BufferedReader br = new BufferedReader(new InputStreamReader(input));
-        result = engineConfiguration.test(br);
+        engineConfiguration.updateEngineInformationManager();
+
         return result;
     }
-
-    /*@GET
-    // @Path("/status/{engineid}")
-    @Path("/engineIp/{ipaddress}")
-    @Produces("application/json")
-    public String getEngineInformation(@PathParam(value = "ipaddress")String ipaddress){
-
-        try {
-            WorkflowEngineInstance engine = engineBean.getEngine(ipaddress);
-            String result = engine.getIpAddress();
-
-            return result;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "nothing found";
-    }*/
-
-
 
     @GET
     @Path("/removeFromArray")
@@ -163,29 +157,15 @@ public class SchedularStatus {
     @Path("/displayArray")
     @Produces("application/json")
     public String displayArray(){
-        MessageStorageSingletonBean testSingleton = new MessageStorageSingletonBean();
-        return testSingleton.getMessageArray().toString();
+        return MessageStorageSingletonBean.getMessageArray().toString();
     }
 
-    /*@GET
-    @Path("/displayHash")
+    @GET
+    @Path("/displayResult")
     @Produces("application/json")
-    public String displayHash(){
-
-        CheckForFreeEngines checkForFreeEngines = new CheckForFreeEngines();
-        return checkForFreeEngines.displayHashMap();
-
-    }*/
-
-    /*@GET
-    @Path("/displaySomething")
-    @Produces("application/json")
-    public String displaySomething(){
-
-        CheckForFreeEngines checkForFreeEngines = new CheckForFreeEngines();
-        return checkForFreeEngines.getDunno();
-
-    }*/
+    public String displayResult(){
+        return MessageStorageSingletonBean.getResult();
+    }
 
     @GET
     @Path("/displayThreadArray")
@@ -194,10 +174,20 @@ public class SchedularStatus {
         // MessageStorageSingletonBean testSingleton = new MessageStorageSingletonBean();
         //return testSingleton.getMessageArray().toString();
 
+            return  EngineInformationManager.getJmsMessageArray().toString();
+    }
+
+    @GET
+    @Path("/getEngineThreadCount/{ip}")
+    @Produces("application/json")
+    public String getEngineThreadCount(@PathParam(value = "ip")String ip){
+        // MessageStorageSingletonBean testSingleton = new MessageStorageSingletonBean();
+        //return testSingleton.getMessageArray().toString();
+
         try {
             Context c = new InitialContext();
             EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
-            return  manager.getJmsMessageArray().toString();
+            return  "" + manager.getEngineCurrentThreadCount(ip);
         } catch (NamingException e) {
             e.printStackTrace();
         }
@@ -214,22 +204,15 @@ public class SchedularStatus {
 
     }
 
-   /*@GET
-    @Path("/displayThreadArray")
+    @GET
+    @Path("/displayInvocationInformation")
     @Produces("application/json")
-    public String displayThreadArray(){
-        // MessageStorageSingletonBean testSingleton = new MessageStorageSingletonBean();
-        //return testSingleton.getMessageArray().toString();
+    public String displayInvocationInformation(){
 
-        try {
-            Context c = new InitialContext();
-            EngineInformationManager testThread = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
-            return  testThread.getJmsMessageArray().toString();
-        } catch (NamingException e) {
-            e.printStackTrace();
-        }
-        return "not working :(";
-    }*/
+        EngineInformationManager manager = new EngineInformationManager();
+        return manager.displayResourceInformation();
+
+    }
 
     @GET
     @Path("/findRTT")
@@ -245,6 +228,15 @@ public class SchedularStatus {
         }
 
         return result;
+    }
+
+    @GET
+    @Path("/apiTest")
+    @Produces("application/json")
+    public void apiTest(){
+
+        APITest.test();
+
     }
 
 
