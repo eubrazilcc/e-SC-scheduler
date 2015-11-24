@@ -3,7 +3,7 @@ package com.connexience.scheduler;
 import com.connexience.model.EngineInformation;
 import com.connexience.model.InvocationInformation;
 import com.connexience.performance.model.WorkflowEngineInstance;
-import com.connexience.restImplimentations.engineConfiguration;
+import com.connexience.restImplimentations.EngineConfiguration;
 
 import javax.ejb.EJB;
 import javax.ejb.Lock;
@@ -40,7 +40,7 @@ public class EngineInformationManager {
         int maxConcurrentWorkflowInvocation;
         long freeRAM;
         EngineInformation information = new EngineInformation();
-        List<WorkflowEngineInstance> workflowEngineInstances = engineConfiguration.getEngineStatus();
+        List<WorkflowEngineInstance> workflowEngineInstances = EngineConfiguration.getEngineStatus();
         for (int i = 0; i < workflowEngineInstances.size(); i++) {
 
             if (workflowEngineInstances.get(i).getIpAddress().equalsIgnoreCase(engineIp)) {
@@ -198,7 +198,7 @@ public class EngineInformationManager {
             int size = jmsMessageArray.size();
             System.out.println("inside if loop of check for waiting job with array size = " + size);
                // manager.updateEngineStatus(engineIp,true,false);
-            List<WorkflowEngineInstance> workflowEngineInstances  = engineConfiguration.getEngineStatus();
+            List<WorkflowEngineInstance> workflowEngineInstances  = EngineConfiguration.getEngineStatus();
             workflowEngineInstances = MediatorMDB.sortAvailableEngines(workflowEngineInstances, this);
             //MediatorMDB.schedule(MediatorMDB.getDefinitionArrayList(getMessage()),this,workflowEngineInstances);
             Message message = getMessage();

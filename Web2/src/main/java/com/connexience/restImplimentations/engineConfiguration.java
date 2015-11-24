@@ -13,6 +13,11 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.io.*;
 import java.net.*;
+import java.nio.Buffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +26,7 @@ import java.util.List;
  */
 
 
-public class engineConfiguration {
+public class EngineConfiguration {
 
    /* private static final String queue_prefix = "engine";
     private static String finalQueueName;
@@ -36,36 +41,6 @@ public class engineConfiguration {
 
     }*/
 
-    public static int getCount(){
-        int count = 0;
-        try {
-            //Create a File manually as it does not get the permission to write when the file is created using java code
-            //if ( !new File("/tmp/myCount.txt").exists())
-            if ( !new File("/home/anirudh/scheduler/myCount.txt").exists())
-                return 1;
-            else {
-                //BufferedReader br = new BufferedReader(new FileReader(new File("/tmp/myCount.txt")));
-                BufferedReader br = new BufferedReader(new FileReader(new File("/home/anirudh/scheduler/myCount.txt")));
-                String s = br.readLine();
-                count = Integer.parseInt(s);
-                br.close();
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        return count;
-    }
-
-    public static void putCount(int count) {
-        try {
-            //BufferedWriter bw = new BufferedWriter(new FileWriter(new File("/tmp/myCount.txt")));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(new File("/home/anirudh/scheduler/myCount.txt")));
-            bw.write(Integer.toString(count));
-            bw.close();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void createQueue(String queueName){
 
@@ -117,6 +92,7 @@ public class engineConfiguration {
         }
     }
 
+
     private static String readAll(Reader rd) throws IOException {
         StringBuilder sb = new StringBuilder();
         int cp;
@@ -125,6 +101,7 @@ public class engineConfiguration {
         }
         return sb.toString();
     }
+
 
     public static List<WorkflowEngineInstance> getEngineStatus() {
 
@@ -172,6 +149,7 @@ public class engineConfiguration {
 
     }
 
+
     public static void temporaryMethodToCheckHostName(String filename,String hostName){
         try {
             //BufferedWriter bw = new BufferedWriter(new FileWriter(new File("/tmp/" + filename)));
@@ -186,7 +164,7 @@ public class engineConfiguration {
 
 
 
-
+    /*
     public static String updateEngineQueueMapping(String hostName, String queueName){
 
         String returnQueueName = null;
@@ -195,12 +173,11 @@ public class engineConfiguration {
         ObjectMapper mapper = new ObjectMapper();
         EngineQueueMapping queueMapping = new EngineQueueMapping();
         //File file = new File("/tmp/mappings.json");
-        File file = new File("/home/anirudh/scheduler/mappings.json");
+        Path mappingFile = Paths.get("mappings.json");
+        System.out.println(mappingFile.toAbsolutePath());
+
         boolean flagEngineDetailsPresent = false;
-        try {
-
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-
+        try (BufferedReader reader = Files.newBufferedReader(mappingFile, StandardCharsets.UTF_8)) {
             String res = readAll(reader);
             if(!res.equalsIgnoreCase("")) {
                 engineQueueMappings = mapper.readValue(res, new TypeReference<ArrayList<EngineQueueMapping>>() {
@@ -220,7 +197,7 @@ public class engineConfiguration {
                 queueMapping.setIpAddress(hostName);
                 queueMapping.setQueueName(queueName);
                 engineQueueMappings.add(queueMapping);
-                mapper.writeValue(file, engineQueueMappings);
+                mapper.writeValue(mappingFile.toFile(), engineQueueMappings);
                 returnQueueName = queueName;
 
 
@@ -233,6 +210,7 @@ public class engineConfiguration {
         }
         return returnQueueName;
     }
+    */
 
     public static void setEngineMaxThreads(String hostName){
 
@@ -248,15 +226,20 @@ public class engineConfiguration {
 
     }
 
+
+    public static String GetQueueName(String engineId) {
+        return "engine-" + engineId;
+    }
+
+    /*
     public static String fetchQueueName(String ipAddress){
         ObjectMapper mapper = new ObjectMapper();
         //File file = new File("/tmp/mappings.json");
-        File file = new File("/home/anirudh/scheduler/mappings.json");
+        Path mappingFile = Paths.get("mappings.json");
+        System.out.println(mappingFile.toAbsolutePath());
         List<EngineQueueMapping> engineQueueMappings = new ArrayList<EngineQueueMapping>();
         String returnQueueName = null;
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-
+        try (BufferedReader reader = Files.newBufferedReader(mappingFile, StandardCharsets.UTF_8)) {
             String res = readAll(reader);
             if(!res.equalsIgnoreCase("")) {
                 engineQueueMappings = mapper.readValue(res, new TypeReference<ArrayList<EngineQueueMapping>>() {
@@ -275,6 +258,8 @@ public class engineConfiguration {
 
         return  returnQueueName;
     }
+    */
+
 
     public static void updateEngineInformationManager(){
         List<WorkflowEngineInstance> workflowEngineInstances = getEngineStatus();

@@ -35,29 +35,27 @@ public class SchedularStatus {
     @Path("/status/{hostName}")
     //@Path("/status")
     @Produces("application/json")
-    public String getSchedularStatus(@PathParam(value = "hostName")String hostName){
+    public String getSchedularStatus(@PathParam(value = "hostName")String engineId){
 
         String status = "available";
-        int count = engineConfiguration.getCount();
-        count = count + 1;
-        engineConfiguration.putCount(count);
+        String queueName = EngineConfiguration.GetQueueName(engineId);
 
-        String queueName = "engine" + count;
-
-        //engineConfiguration.createQueue(queueName);
+        EngineConfiguration.createQueue(queueName);
 
         // InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("EngineQueueMapping.json");
         //BufferedReader br = new BufferedReader(new InputStreamReader(input));
-        String finalQueueName = engineConfiguration.updateEngineQueueMapping(hostName,queueName);
+        //String finalQueueName = EngineConfiguration.updateEngineQueueMapping(hostName, queueName);
+        //EngineConfiguration.setEngineMaxThreads(engineId);
 
         try {
             Context c = new InitialContext();
             EngineInformationManager manager = (EngineInformationManager) c.lookup("java:global/ejb/EngineInformationManager");
-            manager.checkForWaitingJob(hostName);
+            manager.setEngineStatus(engineId);
+            manager.checkForWaitingJob(engineId);
         } catch (NamingException e) {
             e.printStackTrace();
         }
-        return status + "," + finalQueueName;
+        return status + "," + queueName;
     }
 
     @GET
@@ -105,7 +103,6 @@ public class SchedularStatus {
             //Context c = new InitialContext();
             EngineInformationManager manager = new EngineInformationManager();
             manager.freeResourceInformation(invocationId);
-
     }
 
     @GET
@@ -117,7 +114,7 @@ public class SchedularStatus {
             //WorkflowEngineInstance engine = engineBean.getEngine(ipaddress);
             //String result = engine.getIpAddress();
 
-            List<WorkflowEngineInstance> workflowEngineInstances = engineConfiguration.getEngineStatus();
+            List<WorkflowEngineInstance> workflowEngineInstances = EngineConfiguration.getEngineStatus();
             result = workflowEngineInstances.get(0).getIpAddress() + "   " + workflowEngineInstances.get(0).getCpuSpeed();
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,7 +128,7 @@ public class SchedularStatus {
     public String updateEngineInformationManager(){
         String result = "successfully updated";
 
-        engineConfiguration.updateEngineInformationManager();
+        EngineConfiguration.updateEngineInformationManager();
 
         return result;
     }

@@ -62,7 +62,6 @@ public class DisplayMessageContents extends HttpServlet{
         } finally {
             out.close();
         }
-
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

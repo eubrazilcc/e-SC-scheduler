@@ -9,6 +9,7 @@ import com.connexience.server.workflow.blocks.processor.DataProcessorBlock;
 import com.connexience.server.workflow.cloud.download.DownloadException;
 import com.connexience.server.workflow.cloud.download.WorkflowDataFetcher;
 import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
+import org.hornetq.api.core.TransportConfiguration;
 import org.pipeline.core.drawing.BlockModel;
 import org.pipeline.core.drawing.DrawingModel;
 import org.pipeline.core.drawing.model.DefaultDrawingModel;
@@ -24,7 +25,7 @@ import java.util.Enumeration;
 public class RetrieveRequirementXMLForAllBlocks {
 
     private API apiLink = null;
-    private ApiProvider apiProvider = new ApiProvider();
+    private ApiProvider apiProvider;
     /** Drawing being executed Enumeration blocks = drawing.blocks();*/
     private transient DrawingModel drawing = null;
 
@@ -32,6 +33,18 @@ public class RetrieveRequirementXMLForAllBlocks {
     private XmlDataStore drawingData = null;
 
 
+    public RetrieveRequirementXMLForAllBlocks()
+    {
+        // Create and configure the API provider.
+        apiProvider = new ApiProvider();
+
+        // FIXME: All this should be read from a configuration file.
+        apiProvider.setHostName("localhost");
+        apiProvider.setHttpPort(8080);
+        apiProvider.setServerContext("/workflow");
+        apiProvider.setUseRmi(false);
+        apiProvider.useJMS("localhost", 5445, "connexience", "1234", "WorkflowControl", "WorkflowManagerTopic");
+    }
 
 
     public ArrayList<DataProcessorRequirementsDefinition> getXMLForAllBlocks(WorkflowInvocationMessage message){

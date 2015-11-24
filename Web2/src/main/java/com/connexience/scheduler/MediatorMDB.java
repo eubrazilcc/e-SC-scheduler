@@ -2,7 +2,7 @@ package com.connexience.scheduler;
 
 import com.connexience.model.EngineInformation;
 import com.connexience.performance.model.WorkflowEngineInstance;
-import com.connexience.restImplimentations.engineConfiguration;
+import com.connexience.restImplimentations.EngineConfiguration;
 import com.connexience.server.model.workflow.WorkflowInvocationMessage;
 import com.connexience.server.util.SerializationUtils;
 import com.connexience.server.workflow.service.DataProcessorRequirementsDefinition;
@@ -204,7 +204,7 @@ public class MediatorMDB implements MessageListener{
                 HashMap<String, Double> sortedMap = sortByValues(engineCompare);
                 Map.Entry<String,Double> firstEntry = sortedMap.entrySet().iterator().next();
                 String winningIpAddress = firstEntry.getKey();
-                String winningQueueName = engineConfiguration.fetchQueueName(winningIpAddress);
+                String winningQueueName = EngineConfiguration.GetQueueName(winningIpAddress);
                 manager.updateEngineStatus(winningIpAddress, true, false);
                 manager.reserveResourceInformation(winningIpAddress, getMinPhysicalRam(definitionArrayList), invocationId, getMinDiskSpace(definitionArrayList));
                 //checkForFreeEngines.updateEngineStatus(winningIpAddress, false);
@@ -229,7 +229,7 @@ public class MediatorMDB implements MessageListener{
         definitionArrayList = getDefinitionArrayList(message);
 
         /** Call the restAPI to get the information about the engines */
-        List<WorkflowEngineInstance> workflowEngineInstances  = engineConfiguration.getEngineStatus();
+        List<WorkflowEngineInstance> workflowEngineInstances  = EngineConfiguration.getEngineStatus();
         try {
             //javax.naming.Context c = new InitialContext();
             EngineInformationManager manager = new EngineInformationManager();
