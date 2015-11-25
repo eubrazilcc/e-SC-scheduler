@@ -13,6 +13,8 @@ import javax.jms.Message;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by naa166 - Anirudh Agarwal on 06/07/2015.
@@ -23,8 +25,9 @@ import java.util.List;
 @EJB(name = "java:global/ejb/EngineInformationManager", beanInterface = EngineInformationManager.class)
 public class EngineInformationManager {
 
-    public static HashMap<String, EngineInformation> engineThreadMapping = new HashMap<String, EngineInformation>();
-    public static HashMap<String, InvocationInformation> resourceInformation = new HashMap<String, InvocationInformation>();
+    public static ConcurrentHashMap<String, EngineInformation> engineThreadMapping = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, InvocationInformation> resourceInformation = new ConcurrentHashMap<>();
+
 
     public void setEngineStatus(String engineIp, EngineInformation information){
         engineThreadMapping.put(engineIp,information);
@@ -65,7 +68,7 @@ public class EngineInformationManager {
         engineThreadMapping.put(engineIp,information);
     }
 
-   public int getEngineCurrentThreadCount(String EngineIp){
+   public int getEngineCurrentThreadCount(String EngineIp) {
         return engineThreadMapping.get(EngineIp).getThreadCount();
     }
 
@@ -78,28 +81,50 @@ public class EngineInformationManager {
     }
 
     public String displayHashMap() {
-        String result = "";
-        for (Object key : engineThreadMapping.keySet()) {
+        StringBuilder result = new StringBuilder();
 
-            result = result + key.toString() + " :" + engineThreadMapping.get(key).getThreadCount() +
-                    " - Free RAM:   " + engineThreadMapping.get(key).getFreeRam() +  " - Free Disk Space:   " + engineThreadMapping.get(key).getDiskFreeSpace();
-
+        for (Map.Entry<String, EngineInformation> e : engineThreadMapping.entrySet()) {
+            result.append("engineId = ");
+            result.append(e.getKey());
+            result.append(": thread count = ");
+            result.append(e.getValue().getThreadCount());
+            result.append(", free RAM = ");
+            result.append(e.getValue().getFreeRam());
+            result.append(", free disk space = ");
+            result.append(e.getValue().getDiskFreeSpace());
+            result.append("\n");
         }
 
-        return result;
-    }
-
-    public String displayResourceInformation() {
-        String result = "";
-        for (Object key : resourceInformation.keySet()) {
-
-            result = result + key.toString() + " :" + resourceInformation.get(key).getEngineIp()
-                    + " " + resourceInformation.get(key).getPhysicalRAM() + " " + resourceInformation.get(key).getDiskSpace();
-
+        if (result.length() > 1) {
+            result.setLength(result.length() - 1);
         }
 
-        return result;
+        return result.toString();
     }
+
+    public String displayResourceInformation()
+    {
+        StringBuilder result = new StringBuilder();
+
+        for (Map.Entry<String, InvocationInformation> e : resourceInformation.entrySet()) {
+            result.append("invocationId = ");
+            result.append(e.getKey());
+            result.append(": engineId = ");
+            result.append(e.getValue().getEngineIp());
+            result.append(", required RAM = ");
+            result.append(e.getValue().getPhysicalRAM());
+            result.append(", required disk space = ");
+            result.append(e.getValue().getDiskSpace());
+            result.append("\n");
+        }
+
+        if (result.length() > 1) {
+            result.setLength(result.length() - 1);
+        }
+
+        return result.toString();
+    }
+
 
     private static ArrayList<Message> jmsMessageArray = new ArrayList<Message>();
 
