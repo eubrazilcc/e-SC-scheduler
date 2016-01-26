@@ -50,13 +50,13 @@
                 <scope>import</scope>
             </dependency>
 
-            <dependency>
+            <!--dependency>
                 <groupId>org.jboss.spec.javax.servlet</groupId>
                 <artifactId>jboss-servlet-api_3.0_spec</artifactId>
                 <version>1.0.2.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
+            </dependency-->
 
             <dependency>
                 <groupId>org.jboss.bom</groupId>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>com.connexience</groupId>
                 <artifactId>monitoring-common</artifactId>
-                <version>0.8-SNAPSHOT</version>
+                <version>0.10-SNAPSHOT</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

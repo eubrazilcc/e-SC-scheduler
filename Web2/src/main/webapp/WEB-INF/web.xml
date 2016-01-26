@@ -5,58 +5,12 @@
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
 
-    <servlet>
-        <servlet-name>Demo</servlet-name>
-        <servlet-class>com.connexience.scheduler.Demo</servlet-class>
-    </servlet>
-  <!--  <servlet>
-        <servlet-name>AccessPerformanceMonitorAPIs</servlet-name>
-        <servlet-class>com.connexience.scheduler.AcessPerformanceMonitorAPIs</servlet-class>
-    </servlet>-->
-    <servlet>
-        <servlet-name>QueueDemo</servlet-name>
-        <servlet-class>com.connexience.scheduler.QueueDemo</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>TemporaryQueueDemo</servlet-name>
-        <servlet-class>com.connexience.scheduler.TempQueueDemo</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>CreateQueue</servlet-name>
-        <servlet-class>com.connexience.scheduler.CreateTemporaryQueue</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>MessageContents</servlet-name>
-        <servlet-class>com.connexience.scheduler.DisplayMessageContents</servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>Demo</servlet-name>
-        <url-pattern>/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>QueueDemo</servlet-name>
-        <url-pattern>/queue</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>TemporaryQueueDemo</servlet-name>
-        <url-pattern>/tempQueue</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>CreateQueue</servlet-name>
-        <url-pattern>/createQueue</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>MessageContents</servlet-name>
-        <url-pattern>/displayMessage</url-pattern>
-    </servlet-mapping>
-
-    <context-param>
+    <!--context-param>
         <param-name>resteasy.resources</param-name>
         <param-value>
-            com.connexience.restImplimentations.SchedularStatus
+            com.connexience.restImplimentations.SchedulerStatus
         </param-value>
-    </context-param>
+    </context-param-->
 
     <filter>
         <filter-name>CORS</filter-name>

@@ -35,7 +35,7 @@
                         <webModule>
                             <groupId>com.connexience</groupId>
                             <artifactId>scheduler-web</artifactId>
-                            <contextRoot>/AScheduler</contextRoot>
+                            <contextRoot>/scheduler</contextRoot>
                             <bundleFileName>scheduler-web.war</bundleFileName>
                         </webModule>
                     </modules>
