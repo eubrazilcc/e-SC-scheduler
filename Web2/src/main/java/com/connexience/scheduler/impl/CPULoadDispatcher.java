@@ -45,6 +45,58 @@ public class CPULoadDispatcher implements IDispatcher
     { }
 
 
+    @Override
+    public List<Map.Entry<ResourceAllocationRequest, ComputeNode>> dispatch(Collection<ResourceAllocationRequest> requests, Collection<ComputeNode> availableNodes) {
+        ArrayList<Map.Entry<ResourceAllocationRequest, ComputeNode>> mapping = new ArrayList<>();
+
+        // A local cache with CPU load
+        final HashMap<ComputeNode, Double> minCpuLoadForNode = new HashMap<>();
+
+        // Sort nodes in descending order
+        //
+        ArrayList<ComputeNode> nodesByCpuLoad = new ArrayList<>();
+        nodesByCpuLoad.addAll(availableNodes);
+
+        if (nodesByCpuLoad.size() > 1) {
+            // As a side-effect, sort will fill in the minCpuLoadForNode map.
+            Collections.sort(nodesByCpuLoad, new Comparator<ComputeNode>() {
+                @Override
+                public int compare(ComputeNode o1, ComputeNode o2) {
+                    return Double.compare(_getCPULoad(o1, minCpuLoadForNode), _getCPULoad(o2, minCpuLoadForNode));
+                }
+            });
+        } else {
+            // Handle the case when there's only one engine attached. Sorting does not occur then.
+            _getCPULoad(nodesByCpuLoad.get(0), minCpuLoadForNode);
+        }
+
+        // Then, start from the first request to give better chances in avoiding starvation.
+        //
+        for (ResourceAllocationRequest request : requests) {
+            for (ComputeNode node : nodesByCpuLoad) {
+                _Logger.debug("CPU load for node: {} is: {}", node.id, minCpuLoadForNode.get(node));
+                if (minCpuLoadForNode.get(node) < 80.0) {
+                    try {
+                        // Even if allocate is unset, we need to allocate resources for a moment, so for other requests
+                        // the node resources are partially consumed.
+                        if (node.allocate(request.resourceAllocations)) {
+                            // Ok, remember mapping and go for another resource.
+                            mapping.add(new AbstractMap.SimpleEntry<>(request, node));
+                            // FIXME: If the node has more than a single execution thread, adding a request to the node
+                            // should change its position on the nodesByCpuLoad list --> the node's CPU is going to be loaded.
+                            break;
+                        }
+                    } catch (ResourceNotAvailableException x) {
+                        _Logger.debug("Node: " + node.id + " cannot meet requirement for request " + request.id, x);
+                    }
+                }
+            }
+        }
+
+        return mapping;
+    }
+
+
     /**
      * This is a simple method to read CPU load of a ComputeNode.
      *
@@ -52,7 +104,7 @@ public class CPULoadDispatcher implements IDispatcher
      * @param minCpuLoadForNode
      * @return
      */
-    int _getCPULoad(ComputeNode node, HashMap<ComputeNode, Integer> minCpuLoadForNode)
+    double _getCPULoad(ComputeNode node, HashMap<ComputeNode, Double> minCpuLoadForNode)
     {
         if (!minCpuLoadForNode.containsKey(node)) {
             ArrayList<Resource> cpuRes = node.getResourcesByType(Constants.ResourceType.CPU);
@@ -60,12 +112,12 @@ public class CPULoadDispatcher implements IDispatcher
                 _Logger.debug("Node " + node.id + " has no resource " + Constants.ResourceType.CPU);
             }
 
-            int minLoad = Integer.MAX_VALUE;
+            double minLoad = Double.MAX_VALUE;
             if (cpuRes != null) {
                 for (Resource r : cpuRes) {
                     SatisfierProperty p = r.getProperty(Constants.Property.CPU_LOAD);
                     if (p != null) {
-                        Integer load = Utils.TryGetInteger(p.getValue());
+                        Double load = Utils.TryGetDouble(p.getValue());
                         if (load != null && load < minLoad) {
                             minLoad = load;
                         }
@@ -73,55 +125,16 @@ public class CPULoadDispatcher implements IDispatcher
                 }
             }
 
-            if (minLoad == Integer.MAX_VALUE) {
+            if (minLoad == Double.MAX_VALUE) {
                 // Can't find out the real CPU load so lets assume 40%
-                minCpuLoadForNode.put(node, 40);
-                return 40;
+                minCpuLoadForNode.put(node, 40.0);
+                return 40.0;
+            } else {
+                minCpuLoadForNode.put(node, minLoad);
+                return minLoad;
             }
         }
 
         return minCpuLoadForNode.get(node);
-    }
-
-
-    @Override
-    public List<Map.Entry<ResourceAllocationRequest, ComputeNode>> dispatch(Collection<ResourceAllocationRequest> requests, Collection<ComputeNode> availableNodes) {
-        ArrayList<Map.Entry<ResourceAllocationRequest, ComputeNode>> mapping = new ArrayList<>();
-
-        // Sort nodes in descending order
-        //
-        ArrayList<ComputeNode> nodesByCpuLoad = new ArrayList<>();
-        nodesByCpuLoad.addAll(availableNodes);
-        // A local cache for sorting purposes.
-        final HashMap<ComputeNode, Integer> minCpuLoadForNode = new HashMap<>();
-
-        Collections.sort(nodesByCpuLoad, new Comparator<ComputeNode>() {
-            @Override
-            public int compare(ComputeNode o1, ComputeNode o2) {
-                return Integer.compare(_getCPULoad(o2, minCpuLoadForNode), _getCPULoad(o1, minCpuLoadForNode));
-            }
-        });
-
-        // Then, start from the first request to give better chances in avoiding starvation.
-        //
-        for (ResourceAllocationRequest request : requests) {
-            for (ComputeNode node : nodesByCpuLoad) {
-                try {
-                    // Even if allocate is unset, we need to allocate resources for a moment, so for other requests
-                    // the node resources are partially consumed.
-                    if (node.allocate(request.resourceAllocations)) {
-                        // Ok, remember mapping and go for another resource.
-                        mapping.add(new AbstractMap.SimpleEntry<>(request, node));
-                        // FIXME: If the node has more than a single execution thread, adding a request to the node
-                        // should change its position on the nodesByCpuLoad list --> the node's CPU is going to be loaded.
-                        break;
-                    }
-                } catch (ResourceNotAvailableException x) {
-                    _Logger.debug("Node: " + node.id + " cannot meet requirement for request " + request.id, x);
-                }
-            }
-        }
-
-        return mapping;
     }
 }

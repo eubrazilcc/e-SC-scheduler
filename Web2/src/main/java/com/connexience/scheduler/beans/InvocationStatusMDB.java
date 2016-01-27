@@ -104,7 +104,7 @@ public class InvocationStatusMDB implements MessageListener, APIMessageHandler
                 _setWorkflowStatus((String) args[0], (Integer) args[1], (String) args[2]);
                 return "";
             default:
-                _Logger.debug("Operation {} has been ignored", operationName);
+                _Logger.trace("Operation {} has been ignored", operationName);
         }
 
         return "";
@@ -113,9 +113,10 @@ public class InvocationStatusMDB implements MessageListener, APIMessageHandler
 
     private void _logWorkflowComplete(String invocationId, String status) {
         try {
+            _Logger.debug("WorkflowComplete {}: releasing resources for invocation: {}", status, invocationId);
             _schedulerBean.releaseResources(invocationId);
         } catch (ResourceNotAvailableException x) {
-            _Logger.warn("Internal scheduler error: cannot release resources for invocation: {}, status: {}", invocationId, status);
+            _Logger.warn("Internal scheduler error: cannot release resources for invocation: {}, status: {}", invocationId, status, x);
         }
     }
 
@@ -139,9 +140,10 @@ public class InvocationStatusMDB implements MessageListener, APIMessageHandler
             case WorkflowInvocationFolder.INVOCATION_FINISHED_WITH_ERRORS:
             case WorkflowInvocationFolder.INVOCATION_FINISHED_OK:
                 try {
+                    _Logger.debug("WorkflowStatus {}: releasing resources for invocation: {}", status, invocationId);
                     _schedulerBean.releaseResources(invocationId);
                 } catch (ResourceNotAvailableException x) {
-                    _Logger.warn("Internal scheduler error: cannot release resources for invocation: {}, status: {}", invocationId, status);
+                    _Logger.warn("Internal scheduler error: cannot release resources for invocation: {}, status: {}", invocationId, status, x);
                 }
                 break;
         }

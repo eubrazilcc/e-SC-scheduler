@@ -3,6 +3,8 @@ package com.connexience.scheduler;
 import com.connexience.performance.model.WorkflowEngineInstance;
 import com.connexience.scheduler.model.*;
 
+import java.util.Collection;
+
 
 /**
  * This is a utility class with some helper methods used throughout the project.
@@ -20,6 +22,25 @@ public abstract class Utils
     public static ComputeNode[] ToComputeNodes(WorkflowEngineInstance[] engineInfo)
     {
         ComputeNode[] nodes = new ComputeNode[engineInfo.length];
+
+        int i = 0;
+        for (WorkflowEngineInstance info : engineInfo) {
+            nodes[i++] = ToComputeNode(info);
+        }
+
+        return nodes;
+    }
+
+
+    /**
+     * A simple helper method that converts an array of engine information into an array of generic ComputeNodes.
+     *
+     * @param engineInfo
+     * @return
+     */
+    public static ComputeNode[] ToComputeNodes(Collection<WorkflowEngineInstance> engineInfo)
+    {
+        ComputeNode[] nodes = new ComputeNode[engineInfo.size()];
 
         int i = 0;
         for (WorkflowEngineInstance info : engineInfo) {
@@ -82,6 +103,21 @@ public abstract class Utils
     public static boolean IsNullOrBlank(String text)
     {
         return text == null || "".equals(text.trim());
+    }
+
+    public static Double TryGetDouble(Object propertyValue)
+    {
+        if (propertyValue == null) {
+            return null;
+        }
+
+        if (propertyValue instanceof Double) {
+            return (Double) propertyValue;
+        } else if (propertyValue instanceof Number) {
+            return ((Number)propertyValue).doubleValue();
+        }
+
+        throw new IllegalArgumentException("Cannot convert value type: " + propertyValue.getClass() + " to Double.");
     }
 
     public static Long TryGetLong(Object propertyValue)

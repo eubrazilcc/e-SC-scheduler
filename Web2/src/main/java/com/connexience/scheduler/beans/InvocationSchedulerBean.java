@@ -126,64 +126,69 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
     @Override
     public void run()
     {
-        // Get all allocation requests which the scheduler was asked to process
-        ArrayList<ResourceAllocationRequest> currentRequestList = new ArrayList<>();
-        if (_requests.drainTo(currentRequestList) > 0) {
+        try {
+            // Get all allocation requests which the scheduler was asked to process
+            ArrayList<ResourceAllocationRequest> currentRequestList = new ArrayList<>();
+            if (_requests.drainTo(currentRequestList) > 0) {
 
-            // Get a snapshot of the currently available nodes
-            ArrayList<ComputeNode> currentNodes = new ArrayList<>();
-            synchronized (_availableNodes) {
-                currentNodes.addAll(_availableNodes.values());
-            }
-
-            // FIXME: What about requests that cannot be allocated at all? For example due to strange resources requested?
-
-            // Dispatch requests
-            List<Map.Entry<ResourceAllocationRequest, ComputeNode>> allocationMap = _invocationDispatcher.dispatch(currentRequestList, currentNodes);
-            for (Map.Entry<ResourceAllocationRequest, ComputeNode> entry : allocationMap) {
-                // Just for convenience
-                ResourceAllocationRequest req = entry.getKey();
-                ComputeNode node = entry.getValue();
-
-                try {
-                    QueueManager.PushMessage(_connectionFactory, QueueManager.GetQueueNameForEngine(node.id), (Message) req.content);
-
-                    // If push went ok, remove the request from the list and...
-                    currentRequestList.remove(req);
-
-                    // add it to the committed resource map.
-                    synchronized (_committedResources) {
-                        _committedResources.put(req.id, new CommittedResourceAllocation(req, new Date().getTime(), node));
-                    }
-
-                    // TODO: Some mechanism to deal with incomplete/failed invocations should be put it place here
-                    // For example, what if an engine has been killed without letting the Scheduler know. It's
-                    // queue may include some waiting invocations. Note that started invocations are already monitored
-                    // by the server.
-
-                } catch (JMSException | NamingException x) {
-                    // However, if push failed, we need to release resources allocated during dispatch
-                    node.release(req.resourceAllocations);
-
-                    // TODO: Two more issues if it's not possible to push the request to the node:
-                    // 1. The request should be reallocated; perhaps during this event.
-                    // 2. The node may no longer be valid and perhaps should be removed from available nodes?
-                    _Logger.error("Cannot push request {} to node {}: {}", req.id, node.id, x);
+                // Get a snapshot of the currently available nodes
+                ArrayList<ComputeNode> currentNodes = new ArrayList<>();
+                synchronized (_availableNodes) {
+                    currentNodes.addAll(_availableNodes.values());
                 }
+
+                // FIXME: What about requests that cannot be allocated at all? For example due to strange resources requested?
+
+                // Dispatch requests
+                List<Map.Entry<ResourceAllocationRequest, ComputeNode>> allocationMap = _invocationDispatcher.dispatch(currentRequestList, currentNodes);
+                for (Map.Entry<ResourceAllocationRequest, ComputeNode> entry : allocationMap) {
+                    // Just for convenience
+                    ResourceAllocationRequest req = entry.getKey();
+                    ComputeNode node = entry.getValue();
+
+                    try {
+                        QueueManager.PushMessage(_connectionFactory, QueueManager.GetQueueNameForEngine(node.id), (Message) req.content);
+
+                        // If push went ok, remove the request from the list and...
+                        currentRequestList.remove(req);
+
+                        // add it to the committed resource map.
+                        synchronized (_committedResources) {
+                            _committedResources.put(req.id, new CommittedResourceAllocation(req, new Date().getTime(), node));
+                        }
+
+                        // TODO: Some mechanism to deal with incomplete/failed invocations should be put it place here
+                        // For example, what if an engine has been killed without letting the Scheduler know. It's
+                        // queue may include some waiting invocations. Note that started invocations are already monitored
+                        // by the server.
+
+                    } catch (JMSException | NamingException x) {
+                        // However, if push failed, we need to release resources allocated during dispatch
+                        node.release(req.resourceAllocations);
+
+                        // TODO: Two more issues if it's not possible to push the request to the node:
+                        // 1. The request should be reallocated; perhaps during this event.
+                        // 2. The node may no longer be valid and perhaps should be removed from available nodes?
+                        _Logger.error("Cannot push request {} to node {}: {}", req.id, node.id, x);
+                    }
+                }
+
+                // Re-add all requests that missed this dispatch event
+                _requests.addAll(currentRequestList);
             }
 
-            // Re-add all requests that missed this dispatch event
-            _requests.addAll(currentRequestList);
+            // Schedule next dispatching event
+            _wakeUpTimer.schedule(this, DISPATCH_INTERVAL_IN_MILLIS, TimeUnit.MILLISECONDS);
+        } catch (Exception x) {
+            _Logger.error("Error in the scheduler's dispatch loop: " + x);
         }
-
-        // Schedule next dispatching event
-        _wakeUpTimer.schedule(this, DISPATCH_INTERVAL_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
 
     @Override
     public void requestResources(ResourceAllocationRequest request)
     {
+        _Logger.debug("Resource request: " + request.id);
         _requests.add(request);
     }
 
@@ -290,25 +295,52 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
     }
 
 
-    public void refreshNodesRegistration(ComputeNode[] nodes)
+    /**
+     * FIXME: Refresh details about nodes, but only these nodes which are not running anything.
+     *
+     * @param nodes
+     */
+    void refreshNodesRegistration(ComputeNode[] nodes) //, HashSet<String> freeNodes)
     {
-        HashMap<String, String> freshRegMap = new HashMap<>();
-
+        // First clean the availableNodes map of all inactive nodes
+        //
         synchronized (_availableNodes) {
-            _availableNodes.clear();
-
-            for (ComputeNode node : nodes) {
-                String regId = _registrationMap.get(node.id);
-                if (regId != null) {
-                    freshRegMap.put(node.id, regId);
-                    _availableNodes.put(node.id, node);
+            // Use .toArray(...) to avoid concurrent map modification exceptions.
+            int size = _availableNodes.size();
+            for (String nodeId : _availableNodes.keySet().toArray(new String[size])) {
+                boolean onTheList = false;
+                for (ComputeNode node : nodes) {
+                    if (nodeId.equals(node.id)) {
+                        onTheList = true;
+                        break;
+                    }
                 }
-                // else --> ignore the nodes which haven't been registered
-            }
 
-            _registrationMap.clear();
-            _registrationMap.putAll(freshRegMap);
+                if (!onTheList) {
+                    _availableNodes.remove(nodeId);
+                    _registrationMap.remove(nodeId);
+                }
+            }
         }
+
+        // Second, update node resources but only for the nodes which are free (as perceived by the PerfMon) and have
+        // no committed allocations (as perceived by the Scheduler).
+        //
+//        synchronized (_committedResources) {
+//            for (ComputeNode freeNode : freeNodes) {
+//                boolean isFree = true;
+//                for (CommittedResourceAllocation alloc : _committedResources.values()) {
+//                    if (freeNode.id.equals(alloc.node.id)) {
+//                        isFree = false;
+//                        break;
+//                    }
+//                }
+//
+//                if (isFree) {
+//
+//                }
+//            }
+//        }
     }
 
 
@@ -319,10 +351,32 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
     // performance of this monitoring task.
     private class EngineMonitoringTask implements Runnable
     {
+        /**
+         * From the given list of engines return only these which are not running anything. Otherwise the resource
+         * usage may be inaccurate.
+         *
+         * @param engines
+         * @return
+         */
+        private HashSet<String> _filterBusy(WorkflowEngineInstance[] engines)
+        {
+            HashSet<String> freeEngines = new HashSet<>(engines.length);
+
+            for (WorkflowEngineInstance engine : engines) {
+                if (engine.getRunningWorkflowCount() == 0) {
+                    freeEngines.add(engine.getIpAddress());
+                }
+            }
+
+            return freeEngines;
+        }
+
+
         @Override
         public void run() {
             try {
-                refreshNodesRegistration(Utils.ToComputeNodes(PerformanceClient.RefreshEngineInfo()));
+                WorkflowEngineInstance[] engineInfo = PerformanceClient.RefreshEngineInfo();
+                refreshNodesRegistration(Utils.ToComputeNodes(engineInfo));//, _filterBusy(engineInfo));
             } catch (ConnexienceException x) {
                 _Logger.warn("Unable to retrieve engine information from the performance monitor.", x);
             }
