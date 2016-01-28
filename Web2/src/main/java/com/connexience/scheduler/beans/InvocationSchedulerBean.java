@@ -29,17 +29,14 @@ import com.connexience.scheduler.model.*;
 import com.connexience.server.ConnexienceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.Perf;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.*;
 import javax.inject.Inject;
 import javax.jms.*;
-import javax.jms.Queue;
 import javax.naming.NamingException;
 import java.io.IOException;
 import java.util.*;
-import java.util.Timer;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -107,7 +104,6 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
     @PostConstruct
     public void init()
     {
-        //_wakeUpTimer.schedule(this, INTERVAL_IN_MILLIS);
         _wakeUpTimer.schedule(this, DISPATCH_INTERVAL_IN_MILLIS, TimeUnit.MILLISECONDS);
         _wakeUpTimer.schedule(new EngineMonitoringTask(), MONITOR_INTERVAL_IN_SECONDS, TimeUnit.SECONDS);
 
@@ -180,7 +176,7 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
             // Schedule next dispatching event
             _wakeUpTimer.schedule(this, DISPATCH_INTERVAL_IN_MILLIS, TimeUnit.MILLISECONDS);
         } catch (Exception x) {
-            _Logger.error("Error in the scheduler's dispatch loop: " + x);
+            _Logger.error("Error in the scheduler's dispatch loop: " + x, x);
         }
     }
 
@@ -302,9 +298,10 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
      */
     void refreshNodesRegistration(ComputeNode[] nodes) //, HashSet<String> freeNodes)
     {
-        // First clean the availableNodes map of all inactive nodes
-        //
         synchronized (_availableNodes) {
+            // First: Clean the availableNodes map of all inactive nodes
+            //
+
             // Use .toArray(...) to avoid concurrent map modification exceptions.
             int size = _availableNodes.size();
             for (String nodeId : _availableNodes.keySet().toArray(new String[size])) {
@@ -321,8 +318,25 @@ public class InvocationSchedulerBean extends TimerTask implements InvocationSche
                     _registrationMap.remove(nodeId);
                 }
             }
+
+            // FIXME: A TEMPORARY workaround: Update only the CPU load property. It is not an allocatable resource so
+            // we can do it safely.
+            // To do it properly we will need to refactor communication between engine, perfmon, and scheduler.
+            for (ComputeNode node : nodes) {
+                // NOTE! This must only take registered nodes because unregistered nodes are not attached to one of
+                // the scheduler queues.
+                ComputeNode registeredNode = _availableNodes.get(node.id);
+                if (registeredNode != null) {
+                    Double load = Utils.GetMinCPULoad(node, null);
+                    if (load != null) {
+                        Resource res = registeredNode.getResourcesByType(Constants.ResourceType.CPU).get(0);
+                        res.setProperty(Constants.Property.CPU_LOAD, load);
+                    }
+                }
+            }
         }
 
+        // it, even if
         // Second, update node resources but only for the nodes which are free (as perceived by the PerfMon) and have
         // no committed allocations (as perceived by the Scheduler).
         //

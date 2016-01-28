@@ -3,6 +3,7 @@ package com.connexience.scheduler;
 import com.connexience.performance.model.WorkflowEngineInstance;
 import com.connexience.scheduler.model.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 
@@ -13,6 +14,39 @@ import java.util.Collection;
  */
 public abstract class Utils
 {
+    /**
+     * A helper method to read the minimum CPU load from a resource; the minimum because a node can have multiple CPU
+     * resources.
+     *
+     * FIXME: ComputeNodes should have a standardized type for the CPU load (and all other properties). Currently,
+     * CPU load is double as reported by the e-SC engine.
+     *
+     * @param node the node for which the CPU load is extracted
+     * @param defaultValue returned if the given node does not contain information about CPU_LOAD.
+     * @return the minimum CPU load of the node or null if the node do not include CPU load information.
+     */
+    public static Double GetMinCPULoad(ComputeNode node, Double defaultValue) {
+        ArrayList<Resource> cpuRes = node.getResourcesByType(Constants.ResourceType.CPU);
+        if (cpuRes == null) {
+            return defaultValue;
+        }
+
+        double minLoad = Double.MAX_VALUE;
+        for (Resource r : cpuRes) {
+            // The assumption is that CPU has only one CPU_LOAD property.
+            SatisfierProperty p = r.getProperty(Constants.Property.CPU_LOAD);
+            if (p != null) {
+                Double load = Utils.TryGetDouble(p.getValue());
+                if (load != null && load < minLoad) {
+                    minLoad = load;
+                }
+            }
+        }
+
+        return minLoad < Double.MAX_VALUE ? minLoad : defaultValue;
+    }
+
+
     /**
      * A simple helper method that converts an array of engine information into an array of generic ComputeNodes.
      *

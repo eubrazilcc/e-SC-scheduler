@@ -59,7 +59,8 @@ public class Resource
         return null;
     }
 
-    public void setProperty(String name, Integer value)
+
+    public void setProperty(String name, Number value)
     {
         ListIterator<SatisfierProperty> iter = properties.listIterator();
 

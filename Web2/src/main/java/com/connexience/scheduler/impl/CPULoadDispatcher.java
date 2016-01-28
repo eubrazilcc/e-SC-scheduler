@@ -65,7 +65,7 @@ public class CPULoadDispatcher implements IDispatcher
                     return Double.compare(_getCPULoad(o1, minCpuLoadForNode), _getCPULoad(o2, minCpuLoadForNode));
                 }
             });
-        } else {
+        } else if (nodesByCpuLoad.size() == 1) {
             // Handle the case when there's only one engine attached. Sorting does not occur then.
             _getCPULoad(nodesByCpuLoad.get(0), minCpuLoadForNode);
         }
